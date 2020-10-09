@@ -1,13 +1,26 @@
 const express = require('express');
-
+const db = require('./postDb')
 const router = express.Router();
 
-router.get('/', (req, res) => {
-  // do your magic!
+// router.get('/posts', (req, res, next) => {
+//   db.get()
+//     .then(post=> res.status(200).json(post))
+//     .catch(next(error))
+// });
+
+router.get('/', (req, res, next) => {
+  db.get().then(posts=>{
+    res.status(200).json(posts);
+  }).catch(err=>{
+    next(err);
+  })
 });
 
-router.get('/:id', (req, res) => {
-  // do your magic!
+router.get('/:id', validatePostId, (req, res) => {
+  const id = req.params.id;
+  db.getById(id)
+    .then (post => res.status(200).json(post))
+    .catch(next(error))
 });
 
 router.delete('/:id', (req, res) => {
@@ -21,7 +34,14 @@ router.put('/:id', (req, res) => {
 // custom middleware
 
 function validatePostId(req, res, next) {
-  // do your magic!
+  const {id: postId} = req.params;
+  db.getById(postId)
+    .then(post => {
+      if(!post) return res.status(404).json({message: "No post found."});
+      req.post = post;
+      next();
+    })
+    .catch(error=> next(error))
 }
 
 module.exports = router;
